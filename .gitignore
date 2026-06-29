@@ -1,0 +1,8 @@
+*.pyc
+__pycache__/
+*.pth
+*.pt
+output/
+best_model/
+logs/
+*.log
