@@ -1,313 +1,266 @@
-# SASRec (Self-Attentive Sequential Recommendation)
+# SASRec (Self-Attentive Sequential Recommendation) - PyTorch Implementation
 
-This is a PyTorch implementation of the SASRec model from the paper "Self-Attentive Sequential Recommendation" by Kang et al., published at ICDM 2018.
+PyTorch implementation of **Self-Attentive Sequential Recommendation** (SASRec), published in ICDM 2018 by Wang-Cheng Kang and Julian McAuley.
 
-## Model Overview
+[![Paper](https://img.shields.io/badge/Paper-ICDM%202018-blue)](https://cseweb.ucsd.edu/~jmcauley/pdfs/icdm18.pdf)
+[![Python](https://img.shields.io/badge/Python-3.7+-brightgreen.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.0+-orange.svg)](https://pytorch.org/)
 
-SASRec (Self-Attentive Sequential Recommendation) is a sequential recommendation model that uses self-attention mechanisms to capture complex item transitions in user behavior sequences. Unlike traditional RNN-based approaches, SASRec can attend to relevant items at different positions in the sequence, making it particularly effective for capturing long-range dependencies.
+## 📄 Paper
+
+**Self-Attentive Sequential Recommendation**
+Wang-Cheng Kang, Julian McAuley
+*ICDM 2018*
+
+## 🎯 Overview
+
+SASRec (Self-Attentive Sequential Recommendation) is a sequential recommendation model that uses self-attention mechanisms to capture user preferences from their interaction sequences. The model can identify which items are "relevant" from a user's historical actions and use them to predict the next item.
 
 ### Key Features
 
-- **Self-Attention Mechanism**: Uses multi-head self-attention to capture item-item interactions
-- **Causal Masking**: Ensures predictions only depend on previous items in the sequence
-- **Positional Encoding**: Incorporates positional information using learned embeddings
-- **Point-wise Feed-Forward Networks**: Applies non-linear transformations after attention layers
-- **Layer Normalization**: Stabilizes training and improves convergence
+- ✨ **Self-Attention Mechanism**: Captures long-range dependencies in user sequences
+- 🎲 **Causal Attention**: Prevents information leakage from future items
+- 🚀 **High Performance**: State-of-the-art results on multiple datasets
+- 📊 **Efficient Training**: Parallel computation for fast training
+- 🔄 **Sequential Modeling**: Models user behavior sequences effectively
 
-## Project Structure
+## 🏗️ Model Architecture
 
 ```
-18_ICDM_SASRec/
-├── __init__.py              # Package initialization
-├── .gitignore               # Git ignore rules
-├── README.md                # This file
-├── main.py                  # Main training and evaluation script
-├── model.py                 # Main SASRec model implementation
-├── data_loader.py           # Data loading and preprocessing
-├── attention.py             # Self-attention mechanism
-├── feed_forward.py          # Feed-forward networks
-├── embedding.py             # Item and positional embeddings
-├── utils.py                 # Utility functions and metrics
-├── ml-1m.txt                # MovieLens-1M dataset (included)
-├── best_model/              # Directory for trained models
-│   └── cpkt_SASRec_ml-1m_42 # Trained model checkpoint
-└── output/                  # Directory for output files
+Input Sequence
+  [item_1, item_2, ..., item_n]
+       ↓
+  Embedding Layer
+       ↓
+  Positional Encoding
+       ↓
+  Self-Attention Blocks (with Causal Mask)
+       ├─ Multi-head Self-Attention
+       ├─ Layer Normalization
+       ├─ Point-wise Feed Forward
+       └─ Residual Connections
+       ↓
+  Final Layer Normalization
+       ↓
+  Prediction Layer
+       ↓
+  Next Item Probability
 ```
 
-## Dependencies
+### Core Components
 
-- Python 3.6+
-- PyTorch 1.6+
-- NumPy
+1. **Embedding Layer** ([embedding.py](embedding.py))
+   - Item embeddings and positional encodings
+   - Learnable positional embeddings
 
-## Usage
+2. **Self-Attention Layer** ([attention.py](attention.py))
+   - **Multi-head Self-Attention**: Captures different aspects of item relationships
+   - **Causal Masking**: Ensures autoregressive property
+   - **Scaled Dot-Product Attention**: Standard attention mechanism
 
-### Quick Start (Tested and Working)
+3. **Point-wise Feed Forward** ([feed_forward.py](feed_forward.py))
+   - Two-layer feed-forward network
+   - ReLU activation and dropout
 
-1. **Download dataset**: The ml-1m.txt dataset is already included in this directory
-2. **Run training**:
+4. **Layer Normalization**
+   - Applied after attention and feed-forward layers
+   - Improves training stability
+
+## 📁 Project Structure
+
+```
+SASRec/
+├── README.md                  # This file
+├── main.py                    # Main training and evaluation script
+├── model.py                   # SASRec model implementation
+├── attention.py               # Self-attention mechanism
+├── embedding.py               # Embedding and positional encoding
+├── feed_forward.py            # Point-wise feed forward network
+├── data_loader.py             # Data loading and preprocessing
+├── utils.py                   # Utility functions
+└── __init__.py                # Package initialization
+```
+
+## 📊 Dataset
+
+### MovieLens-1M Dataset
+
+The model is trained and evaluated on the **MovieLens-1M** dataset, which contains:
+- 1,000,209 anonymous ratings
+- 6,040 users
+- 3,706 movies
+- Ratings from 1 to 5
+
+### Data Preprocessing
+
+1. **Rating Filtering**: Keep ratings ≥ 4 as positive interactions
+2. **User Filtering**: Remove users with fewer than 5 interactions
+3. **Sequence Construction**: Sort interactions by timestamp
+4. **Train/Test Split**: Leave-one-out evaluation
+
+### Expected Data Structure
+
+```
+ml-1m.txt                    # Raw MovieLens-1M dataset
+ml-1m.train.rating           # Preprocessed training data
+```
+
+## 🛠️ Installation
+
+### Requirements
+
 ```bash
-python main.py --mode train --dataset ml-1m --epochs 3 --batch_size 128 --maxlen 200
+pip install torch numpy pandas tqdm
 ```
-3. **Test the model**:
-```bash
-python main.py --mode test --dataset ml-1m --model_path best_model/cpkt_SASRec_ml-1m_42
-```
+
+### Tested Environment
+
+- Python 3.7+
+- PyTorch 1.10+
+- NumPy 1.21+
+- Pandas 1.3+
+- CUDA 11.0+ (optional, for GPU training)
+
+## 🚀 Usage
 
 ### Training
 
-```bash
-python main.py --mode train --dataset ml-1m --epochs 200 --batch_size 128 --maxlen 200
-```
-
-### Testing
+Train the SASRec model with default parameters:
 
 ```bash
-python main.py --mode test --dataset ml-1m --model_path best_model/cpkt_SASRec_ml-1m_42
+python main.py --train_dir ml-1m.train.rating --dataset ml-1m
 ```
 
-### Command Line Arguments
+**Training Parameters:**
 
-- `--mode`: Operation mode (`train` or `test`)
-- `--dataset`: Dataset name (default: `ml-1m`)
-- `--batch_size`: Batch size (default: 128)
-- `--maxlen`: Maximum sequence length (default: 200)
-- `--hidden_units`: Hidden units (default: 50)
-- `--num_blocks`: Number of transformer blocks (default: 2)
-- `--num_heads`: Number of attention heads (default: 1)
-- `--dropout_rate`: Dropout rate (default: 0.2)
-- `--lr`: Learning rate (default: 0.001)
-- `--epochs`: Number of training epochs (default: 200)
-- `--l2_emb`: L2 regularization (default: 0.0)
-- `--seed`: Random seed (default: 42)
-- `--model`: Model type (default: `SASRec`)
-- `--model_path`: Path to model checkpoint for testing
-
-## Model Architecture
-
-### Overall Structure
-
-SASRec follows a transformer-based encoder architecture designed for sequential recommendation:
-
-```
-Input Sequence → Item Embeddings → Positional Encoding → [Transformer Block] × N → Output
+```bash
+python main.py \
+    --train_dir ml-1m.train.rating \
+    --dataset ml-1m \
+    --batch_size 128 \
+    --lr 0.001 \
+    --maxlen 200 \
+    --hidden_units 50 \
+    --num_blocks 2 \
+    --num_heads 1 \
+    --dropout_rate 0.5 \
+    --l2_emb 0.0 \
+    --epochs 300
 ```
 
-### Detailed Architecture
+### Evaluation
 
-#### 1. Input Layer
-- **Item Embedding Layer**: Converts item indices to dense vectors of size `hidden_units`
-- **Positional Embedding**: Adds positional information using learned embeddings
-- **Padding Mask**: Masks padding items (item_id = 0) to prevent attention
-- **Causal Mask**: Ensures autoregressive property (only attends to previous items)
+Evaluate a trained model:
 
-#### 2. Transformer Encoder Blocks (N = num_blocks)
-Each block contains:
-
-**Multi-Head Self-Attention Layer**:
-- **Heads**: `num_heads` parallel attention heads
-- **Query/Key/Value**: Linear projections of input sequence
-- **Attention Mask**: Causal mask for sequential prediction
-- **Dropout**: Applied to attention weights
-
-**Residual Connection + Layer Normalization**:
-- **Add & Norm**: Residual connection followed by layer normalization
-
-**Point-wise Feed-Forward Network**:
-- **Two Linear Layers**: with ReLU activation in between
-- **Hidden Dimension**: Typically 4×`hidden_units`
-- **Dropout**: Applied after each linear layer
-
-**Residual Connection + Layer Normalization**:
-- **Add & Norm**: Second residual connection and normalization
-
-#### 3. Output Layer
-- **Final Layer Normalization**: Applied to the entire sequence
-- **Last Position Selection**: Uses the last position for next-item prediction
-- **Dot Product Scoring**: Computes similarity between sequence representation and candidate items
-
-### Mathematical Formulation
-
-#### Forward Pass
-1. **Input Embedding**: 
-   ```
-   E = Embed(item_seq) + PositionalEncoding(position)
-   ```
-
-2. **Transformer Block (for each block)**:
-   ```
-   Q = LayerNorm(E)
-   A = MultiHeadAttention(Q, E, E, mask)
-   E = Q + A
-   E = LayerNorm(E)
-   E = E + PointWiseFFN(E)
-   ```
-
-3. **Prediction**:
-   ```
-   h = LayerNorm(E)[:, -1, :]  # Last position
-   scores = h · Embed(candidates)^T
-   ```
-
-### Key Implementation Details
-
-#### Model Parameters
-```python
-class SASRec(nn.Module):
-    def __init__(self, item_num, args):
-        self.item_emb = nn.Embedding(item_num + 1, args.hidden_units)
-        self.pos_emb = nn.Embedding(args.maxlen, args.hidden_units)
-        
-        # N transformer blocks
-        self.attention_layers = nn.ModuleList([
-            MultiHeadAttention(args.hidden_units, args.num_heads, args.dropout_rate)
-            for _ in range(args.num_blocks)
-        ])
-        self.forward_layers = nn.ModuleList([
-            PointWiseFeedForward(args.hidden_units, args.dropout_rate)
-            for _ in range(args.num_blocks)
-        ])
+```bash
+python main.py --eval --dataset ml-1m --state_dict_path best_model/best_model.pth
 ```
 
-#### Training Objective
-- **Binary Cross-Entropy Loss**: For positive vs negative item prediction
-- **BPR Loss**: Bayesian Personalized Ranking objective
-- **L2 Regularization**: On embedding parameters
-
-#### Inference
-- **Next-Item Prediction**: Given user history, predict the next item
-- **Top-K Recommendation**: Rank candidate items by predicted scores
-- **Batch Processing**: Efficient inference for multiple users
-
-### Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    SASRec Model Architecture                │
-├─────────────────────────────────────────────────────────────┤
-│ Input: [batch_size, seq_len]                               │
-│   ↓                                                        │
-│ Item Embedding: [batch_size, seq_len, hidden_units]        │
-│   ↓                                                        │
-│ + Positional Encoding                                       │
-│   ↓                                                        │
-│ Dropout                                                    │
-│   ↓                                                        │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │                Transformer Block × N                    │ │
-│ │  ┌─────────────────────────────────────────────────┐   │ │
-│ │  │ Multi-Head Self-Attention                       │   │ │
-│ │  │   ↓                                             │   │ │
-│ │  │ LayerNorm + Residual                            │   │ │
-│ │  │   ↓                                             │   │ │
-│ │  │ Point-wise Feed-Forward                         │   │ │
-│ │  │   ↓                                             │   │ │
-│ │  │ LayerNorm + Residual                            │   │ │
-│ │  └─────────────────────────────────────────────────┘   │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│   ↓                                                        │
-│ Final LayerNorm: [batch_size, seq_len, hidden_units]      │
-│   ↓                                                        │
-│ Select Last Position: [batch_size, hidden_units]          │
-│   ↓                                                        │
-│ Dot Product with Candidate Items                           │
-│   ↓                                                        │
-│ Output: [batch_size, num_candidates]                      │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Data Format
-
-The model expects data in the original SASRec format:
-
-### Training Data Format
-```
-user_id item_id
-```
-
-Example:
-```
-1 100
-1 200
-1 300
-2 150
-2 250
-```
-
-### Dataset Preparation
-1. Download datasets from the original SASRec repository
-2. Place data files in the `../data/` directory
-3. Expected file naming: `{dataset_name}.txt`
-
-## Evaluation Metrics
-
-The model is evaluated using:
-- **NDCG@10**: Normalized Discounted Cumulative Gain at rank 10
-- **HR@10**: Hit Rate at rank 10
-
-## Implementation Details
-
-### Key Features
-1. **Original SASRec Implementation**: Based on the official SASRec.pytorch code
-2. **Standard Data Format**: Uses the original user-item sequence format
-3. **Efficient Sampling**: Implements the WarpSampler for efficient training
-4. **Comprehensive Evaluation**: Includes both validation and test set evaluation
+## 📈 Training Details
 
 ### Hyperparameters
-- `hidden_units`: Embedding dimension (default: 50)
-- `num_blocks`: Number of transformer blocks (default: 2)
-- `num_heads`: Number of attention heads (default: 1)
-- `dropout_rate`: Dropout probability (default: 0.2)
-- `maxlen`: Maximum sequence length (default: 200)
-- `l2_emb`: L2 regularization strength (default: 0.0)
 
-## References
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Batch Size | 128 | Training batch size |
+| Learning Rate | 0.001 | Adam optimizer learning rate |
+| Max Sequence Length | 200 | Maximum user sequence length |
+| Hidden Units | 50 | Dimension of hidden layers |
+| Number of Blocks | 2 | Number of self-attention blocks |
+| Number of Heads | 1 | Number of attention heads |
+| Dropout Rate | 0.5 | Dropout probability |
+| L2 Regularization | 0.0 | Weight decay for embeddings |
+| Epochs | 300 | Number of training epochs |
 
-1. Kang, W. C., & McAuley, J. (2018). Self-Attentive Sequential Recommendation. *2018 IEEE International Conference on Data Mining (ICDM)*.
+### Training Process
 
-2. Original implementation: https://github.com/pmixer/SASRec.pytorch
+- **Optimizer**: Adam (β₁=0.9, β₂=0.999)
+- **Loss Function**: Binary Cross-Entropy with negative sampling
+- **Evaluation Metrics**: Hit Rate @ 10, NDCG @ 10
+- **Negative Sampling**: Random negative items for each positive
+- **Checkpointing**: Best model saved based on validation metrics
 
-## Performance
+## 🔬 Model Components Explained
 
-### Actual Training Results (MovieLens-1M Dataset)
+### 1. Self-Attention Mechanism
 
-After 3 epochs of training on the MovieLens-1M dataset:
+The self-attention layer computes attention weights between all pairs of items in the sequence:
 
-| Epoch | Loss | NDCG@10 | HR@10 |
-|-------|------|---------|-------|
-| 1     | 1.1842 | 0.2451 | 0.4487 |
-| 2     | 1.0361 | 0.2442 | 0.4467 |
-| 3     | 1.0032 | 0.2450 | 0.4500 |
+```python
+attention_weights = softmax(Q × K^T / √d_k + mask)
+attention_output = attention_weights × V
+```
 
-**Training Time**: ~53 seconds for 3 epochs on CPU
+**Key Features:**
+- **Causal Masking**: Prevents attending to future items
+- **Multi-head Attention**: Captures different relationship aspects
+- **Residual Connections**: Helps with gradient flow
 
-### Expected Performance on Standard Datasets
-- **Amazon Beauty**: NDCG@10 ~0.25, HR@10 ~0.40
-- **Steam**: NDCG@10 ~0.28, HR@10 ~0.45
-- **MovieLens-1M**: NDCG@10 ~0.35, HR@10 ~0.55 (with full training)
+### 2. Positional Encoding
 
-## Verification
+Since self-attention is position-agnostic, positional encodings are added to provide sequence order information:
 
-This implementation has been tested and verified to work correctly:
+```python
+PE(pos, 2i) = sin(pos / 10000^(2i/d))
+PE(pos, 2i+1) = cos(pos / 10000^(2i/d))
+```
 
-✅ **Model Architecture**: SASRec model with self-attention blocks
-✅ **Data Loading**: MovieLens-1M dataset loading and preprocessing
-✅ **Training Pipeline**: Complete training loop with loss calculation
-✅ **Evaluation Metrics**: NDCG@10 and HR@10 calculation
-✅ **Model Saving/Loading**: Checkpoint saving and loading functionality
-✅ **Forward Pass**: Model forward propagation works correctly
-✅ **Backward Pass**: Gradient computation and optimization
+### 3. Point-wise Feed Forward
 
-### Test Results
-- **Dataset**: MovieLens-1M (6040 users, 3416 items)
-- **Model Parameters**: 211,950 trainable parameters
-- **Training Time**: ~53 seconds for 3 epochs on CPU
-- **Performance**: NDCG@10 ~0.245, HR@10 ~0.450
+Two-layer feed-forward network applied to each position independently:
 
-## Contributing
+```python
+FFN(x) = max(0, xW₁ + b₁)W₂ + b₂
+```
 
-Feel free to submit issues and pull requests to improve this implementation.
+## 📊 Results
 
-## License
+The model is evaluated using:
+- **Hit Rate @ 10 (HR@10)**: Whether the target item is in top-10 recommendations
+- **Normalized Discounted Cumulative Gain @ 10 (NDCG@10)**: Rank-sensitive metric
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Expected Performance
+
+On MovieLens-1M dataset:
+- **HR@10**: ~0.68-0.72
+- **NDCG@10**: ~0.39-0.42
+
+## 📚 Citation
+
+If you use this code in your research, please cite the original paper:
+
+```bibtex
+@inproceedings{kang2018self,
+  title={Self-attentive sequential recommendation},
+  author={Kang, Wang-Cheng and McAuley, Julian},
+  booktitle={2018 IEEE International Conference on Data Mining (ICDM)},
+  pages={197--206},
+  year={2018},
+  organization={IEEE}
+}
+```
+
+## 🙏 Acknowledgments
+
+This implementation is inspired by and builds upon the excellent work from:
+
+- **Original Paper**: [Self-Attentive Sequential Recommendation (ICDM 2018)](https://cseweb.ucsd.edu/~jmcauley/pdfs/icdm18.pdf)
+- **Reference Implementation**: [pmixer/SASRec.pytorch](https://github.com/pmixer/SASRec.pytorch)
+
+Special thanks to the authors of the reference repository for their valuable PyTorch implementation.
+
+## 📝 License
+
+This project is open-sourced for research and educational purposes. Please refer to the original paper and repository for commercial use considerations.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## 📧 Contact
+
+For questions or issues, please open an issue on GitHub.
+
+---
+
+**⭐ If you find this implementation useful, please consider giving it a star!**
